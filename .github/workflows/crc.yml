@@ -1,6 +1,7 @@
 name: Test CRC
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   launch-crc:
@@ -18,7 +19,7 @@ jobs:
         shell: bash
         run: |
           crc setup
-          echo ${{ secrets.CRC_PULL_SECRET }} | crc start
+          echo '${{ secrets.CRC_PULL_SECRET }}' | crc start
           eval $(crc oc-env)
 
           # Extract the admin credentials from the line:
