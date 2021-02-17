@@ -5,7 +5,8 @@ on:
 jobs:
   launch-crc:
     name: Download and launch CRC
-    runs-on: ubuntu-20.04
+    # runs-on: ubuntu-20.04
+    runs-on: macos-latest
 
     steps:
       - uses: redhat-actions/openshift-cli-installer@v1
@@ -14,6 +15,7 @@ jobs:
           crc: latest
 
       - name: Setup and run CRC
+        shell: bash
         run: |
           crc setup
           echo ${{ secrets.CRC_PULL_SECRET }} | crc start
@@ -25,13 +27,13 @@ jobs:
           $LOGIN_COMMAND
           eval
 
-      - name: Log in to CRC cluster
-        uses: redhat-actions/oc-login@v1
-        with:
-          openshift_server_url: https://api.crc.testing:6443
-          openshift_username: kubeadmin
-          openshift_password: ${{ env.KUBEADMIN_PASSWORD }}
-          insecure_skip_tls_verify: true
+      # - name: Log in to CRC cluster
+      #   uses: redhat-actions/oc-login@v1
+      #   with:
+      #     openshift_server_url: https://api.crc.testing:6443
+      #     openshift_username: kubeadmin
+      #     openshift_password: ${{ env.KUBEADMIN_PASSWORD }}
+      #thub     insecure_skip_tls_verify: true
 
       - name: Run some oc commands
         run: |
