@@ -19,20 +19,29 @@ jobs:
           oc: latest
           crc: latest
 
+      - name: Clean environment
+        run: |
+          set -xeE -o pipefail
+          crc delete -f || true
+          crc cleanup || true
+          # https://github.com/kubernetes/minikube/issues/6143
+          rm -v /var/db/dhcpd_leases || true
+
       - name: Setup and run CRC
         shell: bash
         env:
           PULL_SECRET_FILE: .pull_secret
         run: |
+          set -xeE -o pipefail
+
           crc setup
           echo '${{ secrets.CRC_PULL_SECRET }}' > ${{ env.PULL_SECRET_FILE }}
-          crc start --pull-secret-file ${{ env.PULL_SECRET_FILE }}
+          crc start --pull-secret-file ${{ env.PULL_SECRET_FILE }} --log-level debug
           eval $(crc oc-env)
 
           # Extract the admin credentials from the single quotes in the line:
           # "To login as a cluster admin, run 'oc login -u kubeadmin -p <password> https://api.crc.testing:6443'. "
-          export LOGIN_COMMAND=$(crc start | grep "kubeadmin" | awk -F"'" '{ print $2 }')
-          $LOGIN_COMMAND --insecure-skip-tls-verify
+          $(crc start | grep "kubeadmin" | awk -F"'" '{ print $2 }') --insecure-skip-tls-verify
 
       # - name: Log in to CRC cluster
       #   uses: redhat-actions/oc-login@v1
@@ -44,5 +53,6 @@ jobs:
 
       - name: Run some oc commands
         run: |
+          set -x
           oc whoami
           oc project
