@@ -7,7 +7,11 @@ jobs:
   launch-crc:
     name: Download and launch CRC
     # runs-on: ubuntu-20.04
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, ubuntu-20.04 ]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: redhat-actions/openshift-cli-installer@v1
@@ -17,9 +21,12 @@ jobs:
 
       - name: Setup and run CRC
         shell: bash
+        env:
+          PULL_SECRET_FILE: .pull_secret
         run: |
           crc setup
-          echo '${{ secrets.CRC_PULL_SECRET }}' | crc start
+          echo '${{ secrets.CRC_PULL_SECRET }}' > ${{ env.PULL_SECRET_FILE }}
+          crc start --memory 6144 --pull-secret-file ${{ env.PULL_SECRET_FILE }}
           eval $(crc oc-env)
 
           # Extract the admin credentials from the line:
