@@ -1,0 +1,39 @@
+name: Test CRC
+on:
+  push:
+
+jobs:
+  launch-crc:
+    name: Download and launch CRC
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: redhat-actions/openshift-cli-installer@v1
+        with:
+          oc: latest
+          crc: latest
+
+      - name: Setup and run CRC
+        run: |
+          crc setup
+          echo ${{ secrets.CRC_PULL_SECRET }} | crc start
+          eval $(crc oc-env)
+
+          # Extract the admin credentials from the line:
+          # "To login as a cluster admin, run 'oc login -u kubeadmin -p <password> https://api.crc.testing:6443'. "
+          export LOGIN_COMMAND=$(crc start | grep "kubeadmin" | awk -F"'" '{ print $2 }')
+          $LOGIN_COMMAND
+          eval
+
+      - name: Log in to CRC cluster
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: https://api.crc.testing:6443
+          openshift_username: kubeadmin
+          openshift_password: ${{ env.KUBEADMIN_PASSWORD }}
+          insecure_skip_tls_verify: true
+
+      - name: Run some oc commands
+        run: |
+          oc whoami
+          oc project
