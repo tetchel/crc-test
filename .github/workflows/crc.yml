@@ -32,7 +32,7 @@ jobs:
           # Extract the admin credentials from the single quotes in the line:
           # "To login as a cluster admin, run 'oc login -u kubeadmin -p <password> https://api.crc.testing:6443'. "
           export LOGIN_COMMAND=$(crc start | grep "kubeadmin" | awk -F"'" '{ print $2 }')
-          $LOGIN_COMMAND
+          $LOGIN_COMMAND --insecure-skip-tls-verify
 
       # - name: Log in to CRC cluster
       #   uses: redhat-actions/oc-login@v1
