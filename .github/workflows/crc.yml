@@ -7,11 +7,12 @@ jobs:
   launch-crc:
     name: Download and launch CRC
     runs-on: macos-latest
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-    #     os: [ macos-latest, ubuntu-20.04 ]
-    # runs-on: ${{ matrix.os }}
+
+    env:
+      PULL_SECRET_FILE: .pull_secret
+      # https://docs.github.com/en/actions/reference/specifications-for-github-hosted-runners#supported-runners-and-hardware-resources
+      NO_CPUS: 2
+      RAM_LIMIT_MB: 10240
 
     steps:
       - uses: redhat-actions/openshift-cli-installer@v1
@@ -29,14 +30,17 @@ jobs:
 
       - name: Setup and run CRC
         shell: bash
-        env:
-          PULL_SECRET_FILE: .pull_secret
         run: |
           set -xeE -o pipefail
 
           crc setup
+
           echo '${{ secrets.CRC_PULL_SECRET }}' > ${{ env.PULL_SECRET_FILE }}
-          crc start --pull-secret-file ${{ env.PULL_SECRET_FILE }} --log-level debug
+          crc start --log-level debug \
+            --memory ${{ env.RAM_LIMIT_MB }} \
+            --cpus ${{ env.NO_CPUS }} \
+            --pull-secret-file ${{ env.PULL_SECRET_FILE }}
+
           eval $(crc oc-env)
 
           # Extract the admin credentials from the single quotes in the line:
